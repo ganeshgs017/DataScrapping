@@ -11,6 +11,8 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import io.github.bonigarcia.wdm.WebDriverManager;
 
 import java.io.FileOutputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -101,16 +103,13 @@ public class MultiApartmentScraper {
                                         "//*[@id=\"QA0Szd\"]/div/div/div[1]/div[3]/div/div[1]/div/div/div[2]/div[7]/div[5]/button/div/div[2]/div[1]");
                             }
 
-                            // If still no contact, try fourth XPath (for the fourth position of the
-                            // contact)
-
+                            // If still no contact, try fourth XPath (for the fourth position of the contact)
                             if (contact.equals("N/A")) {
                                 contact = getContactFromXpath(driver,
                                         "//*[@id=\"QA0Szd\"]/div/div/div[1]/div[3]/div/div[1]/div/div/div[2]/div[7]/div[6]/button/div/div[2]/div[1]");
                             }
 
                             // If still no contact, try fifth XPath (for the fifth position of the contact)
-
                             if (contact.equals("N/A")) {
                                 contact = getContactFromXpath(driver,
                                         "//*[@id=\"QA0Szd\"]/div/div/div[1]/div[3]/div/div[1]/div/div/div[2]/div[7]/div[7]/button/div/div[2]/div[1]");
@@ -119,7 +118,7 @@ public class MultiApartmentScraper {
                             // Check if the contact is a valid phone number
                             if (contact.equals("N/A") || !isValidPhoneNumber(contact)) {
                                 System.out.println(
-                                        "❌ No valid contact found or found invalid contact (likely working hours or location) for: "
+                                        " No valid contact found or found invalid contact (likely working hours or location) for: "
                                                 + apartmentName);
                                 contact = "N/A"; // Set contact to "N/A" if it's not valid
                             } else {
@@ -159,7 +158,8 @@ public class MultiApartmentScraper {
 
             // Write the Excel file to disk
 
-            String filepath = "C:\\Users\\CTV_QCPC\\Desktop\\demo maven\\DataScrapping\\demo\\ApartmentDetails.xlsx"+Math.random();
+            String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            String filepath = "C:\\Users\\CTV_QCPC\\Desktop\\demo maven\\DataScrapping\\demo\\ApartmentDetails " +timestamp + ".xlsx";
             FileOutputStream fileOut = new FileOutputStream(filepath);
 
             workbook.write(fileOut);
