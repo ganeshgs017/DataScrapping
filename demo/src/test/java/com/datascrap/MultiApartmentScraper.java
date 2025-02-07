@@ -1,3 +1,188 @@
+// package com.datascrap;
+
+// import org.apache.poi.xssf.usermodel.XSSFSheet;
+// import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+// import org.apache.poi.ss.usermodel.Row;
+// import org.openqa.selenium.*;
+// import org.openqa.selenium.chrome.ChromeDriver;
+// import org.openqa.selenium.chrome.ChromeOptions;
+// import org.openqa.selenium.support.ui.ExpectedConditions;
+// import org.openqa.selenium.support.ui.WebDriverWait;
+// import io.github.bonigarcia.wdm.WebDriverManager;
+
+// import java.io.FileOutputStream;
+// import java.text.SimpleDateFormat;
+// import java.util.Date;
+// import java.util.HashSet;
+// import java.util.List;
+// import java.util.Set;
+
+// public class MultiApartmentScraper {
+
+//     public static void main(String[] args) throws InterruptedException {
+//         try {
+//             // Setup ChromeDriver
+//             WebDriverManager.chromedriver().setup();
+//             ChromeOptions options = new ChromeOptions();
+//             options.addArguments("--start-maximized");
+//             WebDriver driver = new ChromeDriver(options);
+//             WebDriverWait wait = new WebDriverWait(driver, 10);
+
+//             // Create an Excel workbook and sheet
+//             XSSFWorkbook workbooks = new XSSFWorkbook();
+//             XSSFSheet sheet = workbooks.createSheet("Preschools Data");
+
+//             // Set column headers
+//             Row headerRow = sheet.createRow(0);
+//             headerRow.createCell(0).setCellValue("PreSchools Name");
+//             headerRow.createCell(1).setCellValue("Address");
+//             headerRow.createCell(2).setCellValue("Contact");
+
+//             // Open Google Maps
+//             driver.get("https://www.google.com/maps");
+//             Thread.sleep(3000);
+
+//             // Search for "Preschools near me"
+//             WebElement searchBox = driver.findElement(By.name("q"));
+//             searchBox.sendKeys("Preschools near me");
+//             searchBox.sendKeys(Keys.RETURN);
+//             Thread.sleep(5000);
+
+//             // Track preschools to avoid duplicates
+//             Set<String> processedPreschools = new HashSet<>();
+//             int totalPreschools = 0;
+//             int rowIndex = 1; // Starting row index for data insertion
+
+//             // Loop through continuous scrolling
+//             while (true) {
+//                 // Find all preschools in the list
+//                 String preschoolXpath = "//div[@class='Nv2PK tH5CWc THOPZb ']/a[1]";
+//                 List<WebElement> preschools = wait
+//                         .until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.xpath(preschoolXpath)));
+
+//                 // Loop through each preschool
+//                 for (int i = 0; i < preschools.size(); i++) {
+//                     try {
+//                         WebElement preschool = preschools.get(i);
+
+//                         // Get preschool name and ensure it's unique
+//                         String preschoolName = preschool.getAttribute("aria-label");
+//                         if (processedPreschools.contains(preschoolName)) {
+//                             continue; // Skip if already processed
+//                         }
+//                         processedPreschools.add(preschoolName);
+
+//                         // Scroll into view & click preschool
+//                         ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView({block: 'center'});", preschool);
+//                         Thread.sleep(3000);
+//                         ((JavascriptExecutor) driver).executeScript("arguments[0].click();", preschool);
+//                         Thread.sleep(3000); // Wait for details to load
+
+//                         // Extract Address
+//                         String address = getElementText(wait, "//div[@class='Io6YTe fontBodyMedium kR99db fdkmkc '][1]");
+
+//                         // Extract Contact using loop
+//                         String contact = getValidContact(driver, wait);
+
+//                         // Write data into Excel
+//                         Row row = sheet.createRow(rowIndex++);
+//                         row.createCell(0).setCellValue(preschoolName);
+//                         row.createCell(1).setCellValue(address);
+//                         row.createCell(2).setCellValue(contact);
+
+//                         totalPreschools++;
+
+//                     } catch (Exception e) {
+//                         System.out.println("Error processing preschool: " + (i + 1));
+//                         e.printStackTrace();
+//                     }
+//                 }
+
+//                 // Scroll down to load more preschools (scroll to bottom)
+//                 ((JavascriptExecutor) driver).executeScript("window.scrollTo(0, document.body.scrollHeight)");
+//                 Thread.sleep(3000); // Wait for new preschools to load
+
+//                 // Check if new preschools have been added by comparing the size
+//                 List<WebElement> newPreschools = driver.findElements(By.xpath(preschoolXpath));
+//                 if (newPreschools.size() == preschools.size()) {
+//                     System.out.println("No new preschools found. Exiting...");
+//                     break; // Exit the loop if no new preschools are loaded
+//                 }
+//             }
+
+//             // Write the Excel file to disk
+//             String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+//             String filepath = "C:\\Users\\CTV_QCPC\\Desktop\\demo maven\\DataScrapping\\demo\\PreSchoolsDetails_" + timestamp + ".xlsx";
+//             FileOutputStream fileOut = new FileOutputStream(filepath);
+
+//             workbooks.write(fileOut);
+//             fileOut.close();
+//             System.out.println("Total PreSchools found: " + totalPreschools);
+//             driver.quit();
+
+//         } catch (Exception e) {
+//             e.printStackTrace();
+//         }
+//     }
+
+//     // **Optimized Helper Function to Extract Contact Using a Loop**
+//     public static String getValidContact(WebDriver driver, WebDriverWait wait) {
+//         // Primary contact XPath
+//         String primaryXpath = "//div[@class='OMl5r hH0dDd jBYmhd']";
+//         String primaryContact = getElementText(wait, primaryXpath);
+//         if (!primaryContact.equals("N/A") && isValidPhoneNumber(primaryContact)) {
+//             return primaryContact;
+//         }
+
+//         // Loop through dynamically generated XPaths
+//         for (int i = 5; i <= 7; i++) {
+//             String xpath = "//*[@id='QA0Szd']/div/div/div[1]/div[3]/div/div[1]/div/div/div[2]/div[7]/div[" + i + "]/button/div/div[2]/div[1]";
+//             String contact = getElementText(wait, xpath);
+
+//             if (!contact.equals("N/A") && isValidPhoneNumber(contact)) {
+//                 return contact; // Return the first valid contact found
+//             }
+//         }
+
+//         return "N/A";  // Return "N/A" if no valid contact is found
+//     }
+
+//     // **Helper Function to Get Text from XPath with Explicit Wait**
+//     public static String getElementText(WebDriverWait wait, String xpath) {
+//         try {
+//             WebElement element = wait.until(ExpectedConditions.presenceOfElementLocated(By.xpath(xpath)));
+//             return element.getText().trim();
+//         } catch (Exception e) {
+//             return "N/A";
+//         }
+//     }
+
+//     // **Helper Function to Validate Phone Numbers**
+//     public static boolean isValidPhoneNumber(String text) {
+//         // Remove leading/trailing spaces
+//         text = text.trim();
+
+//         // Allow only digits, spaces, hyphens, and a leading +
+//         if (!text.matches("[0-9+\\-\\s]+")) {
+//             return false; // Reject if any alphabets or special characters are present
+//         }
+
+//         // Remove all non-numeric characters except +
+//         String digitsOnly = text.replaceAll("[^0-9]", "");
+
+//         // Ensure the number has at least 7 digits to be valid
+//         return digitsOnly.length() >= 7;
+//     }
+// }
+
+
+
+
+
+
+
+
+
 package com.datascrap;
 
 import org.apache.poi.xssf.usermodel.XSSFSheet;
@@ -30,8 +215,8 @@ public class MultiApartmentScraper {
             WebDriverWait wait = new WebDriverWait(driver, 10);
 
             // Create an Excel workbook and sheet
-            XSSFWorkbook workbook = new XSSFWorkbook();
-            XSSFSheet sheet = workbook.createSheet("Apartments Data");
+            XSSFWorkbook workbooks = new XSSFWorkbook();
+            XSSFSheet sheet = workbooks.createSheet("Apartments Data");
 
             // Set column headers
             Row headerRow = sheet.createRow(0);
@@ -162,7 +347,7 @@ public class MultiApartmentScraper {
             String filepath = "C:\\Users\\CTV_QCPC\\Desktop\\demo maven\\DataScrapping\\demo\\ApartmentDetails " +timestamp + ".xlsx";
             FileOutputStream fileOut = new FileOutputStream(filepath);
 
-            workbook.write(fileOut);
+            workbooks.write(fileOut);
             fileOut.close();
             System.out.println("Total apartments found: " + totalApartments);
             driver.quit();
@@ -182,9 +367,10 @@ public class MultiApartmentScraper {
         }
     }
 
-    // **Updated Helper Function to Check If Extracted Text is a Valid Phone
-    // Number**
+    // Updated Helper Function to Check If Extracted Text is a Valid Phone
+    // Number
     public static boolean isValidPhoneNumber(String text) {
+
         // Check if the text contains alphabets (exclude such cases)
         if (text.matches(".*[A-Za-z]+.*")) {
             return false; // Exclude text with alphabets (likely geo-location or working hours)
@@ -376,19 +562,19 @@ public class MultiApartmentScraper {
 // searchBox.sendKeys(Keys.RETURN);
 // Thread.sleep(5000);
 
-// // ✅ XPath for First Apartment Listing
+// //  XPath for First Apartment Listing
 // String firstApartmentXpath ="//div[@class='Nv2PK THOPZb CpccDe ']/a[1]";
 
 // // Wait until the first apartment appears
 // WebElement firstApartment =
 // wait.until(ExpectedConditions.elementToBeClickable(By.xpath(firstApartmentXpath)));
 
-// // ✅ Click on the first apartment
+// //  Click on the first apartment
 // ((JavascriptExecutor) driver).executeScript("arguments[0].click();",
 // firstApartment);
 // Thread.sleep(4000); // Wait for details to load
 
-// // ✅ Extract Name, Address, and Contact
+// //  Extract Name, Address, and Contact
 // String apartmentName = firstApartment.getAttribute("aria-label");
 // String address = "N/A";
 // String contact = "N/A";
@@ -410,7 +596,7 @@ public class MultiApartmentScraper {
 // System.out.println("No contact found.");
 // }
 
-// // ✅ Print extracted details
+// //  Print extracted details
 // System.out.println("Apartment Name: " + apartmentName);
 // System.out.println("Address: " + address);
 // System.out.println("Contact: " + contact);

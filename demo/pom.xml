@@ -16,6 +16,13 @@
 
   <dependencies>
     
+    <dependency>
+    <groupId>org.projectlombok</groupId>
+    <artifactId>lombok</artifactId>
+    <version>1.18.24</version> <!-- Or latest version -->
+    <scope>provided</scope>
+</dependency>
+
     
 
     <dependency>
@@ -40,6 +47,7 @@
         <artifactId>poi</artifactId>
         <version>5.2.3</version>
     </dependency>
+
 
     <dependency>
       <groupId>com.sikulix</groupId>
